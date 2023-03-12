@@ -1,0 +1,41 @@
+import cv2
+import numpy as np
+
+# Load the image
+img = cv2.imread('Filter.jpg', 0)
+
+# Define the cutoff frequency
+cutoff_freq = 30
+
+# Compute the Fourier transform of the image
+f = np.fft.fft2(img)
+
+# Shift the zero-frequency component to the center of the spectrum
+fshift = np.fft.fftshift(f)
+
+# Create a matrix of distances from the center of the spectrum
+rows, cols = img.shape
+center_row, center_col = int(rows/2), int(cols/2)
+x = np.arange(-center_col, cols-center_col)
+y = np.arange(-center_row, rows-center_row)
+xx, yy = np.meshgrid(x, y)
+distance = np.sqrt(xx*2 + yy*2)
+
+# Create the Gaussian lowpass filter
+d0 = cutoff_freq
+gaussian_lp = np.exp(-(distance*2)/(2(d0**2)))
+
+# Apply the filter to the Fourier transform of the image
+fshift_filtered = fshift * gaussian_lp
+
+# Shift the zero-frequency component back to the corner of the spectrum
+f_filtered = np.fft.ifftshift(fshift_filtered)
+
+# Compute the inverse Fourier transform of the filtered image
+img_filtered = np.abs(np.fft.ifft2(f_filtered))
+
+# Display the original and filtered images
+cv2.imshow('Original Image', img)
+cv2.imshow('Filtered Image', img_filtered)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
