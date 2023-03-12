@@ -59,3 +59,308 @@ cv2.imshow('Original Image', gray_img)
 cv2.imshow('Filtered Image', filtered_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+
+
+import cv2
+import numpy as np
+
+# Load the image
+img = cv2.imread('Filter.jpg', 0)
+
+# Define the cutoff frequency
+cutoff_freq = 30
+
+# Compute the Fourier transform of the image
+f = np.fft.fft2(img)
+
+# Shift the zero-frequency component to the center of the spectrum
+fshift = np.fft.fftshift(f)
+
+# Create a matrix of distances from the center of the spectrum
+rows, cols = img.shape
+center_row, center_col = int(rows/2), int(cols/2)
+x = np.arange(-center_col, cols-center_col)
+y = np.arange(-center_row, rows-center_row)
+xx, yy = np.meshgrid(x, y)
+distance = np.sqrt(xx*2 + yy*2)
+
+# Create the Gaussian lowpass filter
+d0 = cutoff_freq
+gaussian_lp = np.exp(-(distance*2)/(2(d0**2)))
+
+# Apply the filter to the Fourier transform of the image
+fshift_filtered = fshift * gaussian_lp
+
+# Shift the zero-frequency component back to the corner of the spectrum
+f_filtered = np.fft.ifftshift(fshift_filtered)
+
+# Compute the inverse Fourier transform of the filtered image
+img_filtered = np.abs(np.fft.ifft2(f_filtered))
+
+# Display the original and filtered images
+cv2.imshow('Original Image', img)
+cv2.imshow('Filtered Image', img_filtered)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+
+
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+# Fungsi Gaussian Lowpass Filter
+def gaussian_lowpass_filter(image, cutoff_frequency):
+    # Konversi gambar ke domain frekuensi menggunakan Fast Fourier Transform (FFT)
+    f = np.fft.fft2(image)
+    # Shift frekuensi agar nol berada di tengah
+    fshift = np.fft.fftshift(f)
+    # Mendapatkan ukuran gambar
+    rows, cols = image.shape
+    # Mendapatkan koordinat tengah gambar
+    center_row, center_col = rows // 2, cols // 2
+    # Membuat filter lowpass Gaussian dengan jari-jari cutoff_frequency
+    y, x = np.ogrid[-center_row:rows-center_row, -center_col:cols-center_col]
+    gaussian_filter = np.exp(-((x*x + y*y) / (2 * cutoff_frequency**2)))
+    # Mengalikan filter dengan gambar yang sudah di-shift
+    filtered = fshift * gaussian_filter
+    # Shift kembali gambar ke domain spasial
+    filtered_shift = np.fft.ifftshift(filtered)
+    # Konversi gambar kembali ke domain spasial menggunakan Inverse Fourier Transform (IFFT)
+    filtered_image = np.fft.ifft2(filtered_shift)
+    # Mengambil bagian real dari gambar hasil IFFT
+    filtered_image = np.real(filtered_image)
+    return filtered_image
+
+# Membaca gambar
+image = cv2.imread('suneo.jpg', 0) # Baca gambar dalam mode grayscale
+
+# Melakukan filter
+cutoff_frequency = 30
+filtered_image = gaussian_lowpass_filter(image, cutoff_frequency)
+
+# Menampilkan gambar asli dan hasil filter
+plt.subplot(121), plt.imshow(image, cmap='gray'), plt.title('Gambar Asli')
+plt.subplot(122), plt.imshow(filtered_image, cmap='gray'), plt.title('Hasil Filter Gaussian Lowpass')
+plt.show()
+
+
+
+
+
+#Butter Lowpass Filter
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+# Fungsi Butterworth Lowpass Filter
+def butterworth_lowpass_filter(image, cutoff_frequency, order):
+    # Konversi gambar ke domain frekuensi menggunakan Fast Fourier Transform (FFT)
+    f = np.fft.fft2(image)
+    # Shift frekuensi agar nol berada di tengah
+    fshift = np.fft.fftshift(f)
+    # Mendapatkan ukuran gambar
+    rows, cols = image.shape
+    # Mendapatkan koordinat tengah gambar
+    center_row, center_col = rows // 2, cols // 2
+    # Membuat filter lowpass Butterworth dengan jari-jari cutoff_frequency dan orde order
+    y, x = np.ogrid[-center_row:rows-center_row, -center_col:cols-center_col]
+    radius = np.sqrt(x*x + y*y)
+    butterworth_filter = 1 / (1 + (radius / cutoff_frequency)**(2*order))
+    # Mengalikan filter dengan gambar yang sudah di-shift
+    filtered = fshift * butterworth_filter
+    # Shift kembali gambar ke domain spasial
+    filtered_shift = np.fft.ifftshift(filtered)
+    # Konversi gambar kembali ke domain spasial menggunakan Inverse Fourier Transform (IFFT)
+    filtered_image = np.fft.ifft2(filtered_shift)
+    # Mengambil bagian real dari gambar hasil IFFT
+    filtered_image = np.real(filtered_image)
+    return filtered_image
+
+# Membaca gambar
+image = cv2.imread('suneo.jpg', 0) # Baca gambar dalam mode grayscale
+
+# Melakukan filter
+cutoff_frequency = 30
+order = 2
+filtered_image = butterworth_lowpass_filter(image, cutoff_frequency, order)
+
+# Menampilkan gambar asli dan hasil filter
+plt.subplot(121), plt.imshow(image, cmap='gray'), plt.title('Gambar Asli')
+plt.subplot(122), plt.imshow(filtered_image, cmap='gray'), plt.title('Hasil Filter Butterworth Lowpass')
+plt.show()
+
+
+
+
+
+#Ideal Lowpass Filter
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+# Fungsi Ideal Lowpass Filter
+def ideal_lowpass_filter(image, cutoff_frequency):
+    # Konversi gambar ke domain frekuensi menggunakan Fast Fourier Transform (FFT)
+    f = np.fft.fft2(image)
+    # Shift frekuensi agar nol berada di tengah
+    fshift = np.fft.fftshift(f)
+    # Mendapatkan ukuran gambar
+    rows, cols = image.shape
+    # Mendapatkan koordinat tengah gambar
+    center_row, center_col = rows // 2, cols // 2
+    # Membuat filter lowpass dengan jari-jari cutoff_frequency
+    y, x = np.ogrid[-center_row:rows-center_row, -center_col:cols-center_col]
+    radius = np.sqrt(x*x + y*y)
+    mask = radius <= cutoff_frequency
+    # Mengalikan filter dengan gambar yang sudah di-shift
+    filtered = fshift * mask
+    # Shift kembali gambar ke domain spasial
+    filtered_shift = np.fft.ifftshift(filtered)
+    # Konversi gambar kembali ke domain spasial menggunakan Inverse Fourier Transform (IFFT)
+    filtered_image = np.fft.ifft2(filtered_shift)
+    # Mengambil bagian real dari gambar hasil IFFT
+    filtered_image = np.real(filtered_image)
+    return filtered_image
+# Membaca gambar
+image = cv2.imread('suneo.jpg', 0) # Baca gambar dalam mode grayscale
+# Melakukan filter
+cutoff_frequency = 30
+filtered_image = ideal_lowpass_filter(image, cutoff_frequency)
+# Menampilkan gambar asli dan hasil filter
+plt.subplot(121), plt.imshow(image, cmap='gray'), plt.title('Gambar Asli')
+plt.subplot(122), plt.imshow(filtered_image, cmap='gray'), plt.title('Hasil Filter Ideal Lowpass')
+plt.show()
+
+
+
+
+
+
+#Ideal Highpass Filter
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Membuat filter ideal highpass
+def ideal_hp_filter(rows, cols, D0):
+    P, Q = rows//2, cols//2
+    H = np.zeros((rows, cols))
+    for u in range(rows):
+        for v in range(cols):
+            D_uv = np.sqrt((u-P)*2 + (v-Q)*2)
+            if D_uv >= D0:
+                H[u, v] = 1
+    return H
+
+# Membaca gambar
+img = plt.imread('suneo.jpg')
+
+# Konversi menjadi grayscale
+gray = np.mean(img, axis=2)
+
+# Mendapatkan ukuran gambar
+rows, cols = gray.shape
+
+# Mendapatkan filter ideal highpass
+D0 = 50
+H = ideal_hp_filter(rows, cols, D0)
+
+# Konvolusi gambar dengan filter
+G = np.fft.ifft2(np.fft.fft2(gray) * H).real
+
+# Menampilkan gambar asli dan hasil filtering
+plt.subplot(1, 2, 1)
+plt.imshow(gray, cmap='gray')
+plt.title('Original Image')
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.imshow(G, cmap='gray')
+plt.title('Ideal Highpass Filter')
+plt.axis('off')
+
+plt.show()
+
+
+
+
+
+
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+# Load image
+img = cv2.imread('img1.jpeg', 0)
+
+# Compute FFT
+f = np.fft.fft2(img)
+fshift = np.fft.fftshift(f)
+
+# Ideal Lowpass Filter
+rows, cols = img.shape
+crow, ccol = rows // 2, cols // 2
+mask = np.zeros((rows, cols), np.uint8)
+r = 30  # radius
+cv2.circle(mask, (ccol, crow), r, 255, -1)
+fshift_filtered = fshift * mask
+f_filtered = np.fft.ifftshift(fshift_filtered)
+img_filtered = np.fft.ifft2(f_filtered)
+img_filtered = np.abs(img_filtered)
+
+# Plot results
+plt.subplot(131), plt.imshow(img, cmap='gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(132), plt.imshow(np.log(np.abs(fshift)), cmap='gray')
+plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+plt.subplot(133), plt.imshow(img_filtered, cmap='gray')
+plt.title('Ideal Lowpass Filter'), plt.xticks([]), plt.yticks([])
+plt.show()
+
+
+
+
+
+
+#Butter Lowpass Filter
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+# Fungsi Butterworth Lowpass Filter
+def butterworth_lowpass_filter(image, cutoff_frequency, order):
+    # Konversi gambar ke domain frekuensi menggunakan Fast Fourier Transform (FFT)
+    f = np.fft.fft2(image)
+    # Shift frekuensi agar nol berada di tengah
+    fshift = np.fft.fftshift(f)
+    # Mendapatkan ukuran gambar
+    rows, cols = image.shape
+    # Mendapatkan koordinat tengah gambar
+    center_row, center_col = rows // 2, cols // 2
+    # Membuat filter lowpass Butterworth dengan jari-jari cutoff_frequency dan orde order
+    y, x = np.ogrid[-center_row:rows-center_row, -center_col:cols-center_col]
+    radius = np.sqrt(x*x + y*y)
+    butterworth_filter = 1 / (1 + (radius / cutoff_frequency)**(2*order))
+    # Mengalikan filter dengan gambar yang sudah di-shift
+    filtered = fshift * butterworth_filter
+    # Shift kembali gambar ke domain spasial
+    filtered_shift = np.fft.ifftshift(filtered)
+    # Konversi gambar kembali ke domain spasial menggunakan Inverse Fourier Transform (IFFT)
+    filtered_image = np.fft.ifft2(filtered_shift)
+    # Mengambil bagian real dari gambar hasil IFFT
+    filtered_image = np.real(filtered_image)
+    return filtered_image
+
+# Membaca gambar
+image = cv2.imread('suneo.jpg', 0) # Baca gambar dalam mode grayscale
+
+# Melakukan filter
+cutoff_frequency = 30
+order = 2
+filtered_image = butterworth_lowpass_filter(image, cutoff_frequency, order)
+
+# Menampilkan gambar asli dan hasil filter
+plt.subplot(121), plt.imshow(image, cmap='gray'), plt.title('Gambar Asli')
+plt.subplot(122), plt.imshow(filtered_image, cmap='gray'), plt.title('Hasil Filter Butterworth Lowpass')
+plt.show()
